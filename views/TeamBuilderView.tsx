@@ -18,7 +18,8 @@ const TeamBuilderView: React.FC = () => {
 
   const addMember = (catId: string) => {
     if (teamMembers.length >= 4) return;
-    setTeamMembers([...teamMembers, { catId, sandboxCollarId: null }]);
+    const defaultCollar = collars[0]?.id || null;
+    setTeamMembers([...teamMembers, { catId, sandboxCollarId: defaultCollar }]);
   };
 
   const removeMember = (index: number) => {
@@ -42,7 +43,7 @@ const TeamBuilderView: React.FC = () => {
 
   const bestCombos = useMemo(() => {
     if (teamMembers.length === 0) return [];
-    const collarOptions = [null, ...collars.map(c => c.id)];
+    const collarOptions = collars.map(c => c.id);
     const results: { score: number; picks: { catName: string; collarName: string }[] }[] = [];
 
     const dfs = (idx: number, acc: { score: number; picks: { catName: string; collarName: string }[] }) => {
@@ -114,10 +115,9 @@ const TeamBuilderView: React.FC = () => {
                     <label className="text-[9px] uppercase font-black block mb-1 opacity-60 italic">Тест снаряжения:</label>
                     <select 
                       className="w-full bg-white border-2 border-black p-2 text-[10px] font-black uppercase sketch-border-sm"
-                      value={member.sandboxCollarId || ''}
-                      onChange={(e) => updateMemberCollar(index, e.target.value || null)}
+                      value={member.sandboxCollarId || collars[0]?.id || ''}
+                      onChange={(e) => updateMemberCollar(index, e.target.value)}
                     >
-                      <option value="">Без ошейника</option>
                       {collars.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
