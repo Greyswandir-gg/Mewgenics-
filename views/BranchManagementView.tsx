@@ -7,10 +7,10 @@ const BranchManagementView: React.FC = () => {
   const [newBranchName, setNewBranchName] = useState('');
   const [newBranchColor, setNewBranchColor] = useState('#3b82f6');
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBranchName.trim()) return;
-    addBranch(newBranchName, newBranchColor);
+    await addBranch(newBranchName, newBranchColor);
     setNewBranchName('');
   };
 

@@ -1,10 +1,7 @@
-
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
+import { supabase } from './supabaseClient';
 import { Cat, Branch, CatEvent, Collar, TeamPreset, Temperament, EventType, RelationshipKind, User } from './types';
-import { INITIAL_BRANCHES, DEFAULT_COLLARS, STAT_DEFS } from './constants';
-
-const STORAGE_KEY = 'mewgenics_plus_data';
-const USERS_KEY = 'mewgenics_plus_users';
+import { DEFAULT_COLLARS, STAT_DEFS, INITIAL_BRANCHES } from './constants';
 
 interface AppState {
   cats: Cat[];
@@ -13,109 +10,143 @@ interface AppState {
   teamPresets: TeamPreset[];
   collars: Collar[];
   user: User | null;
+  loading: boolean;
 }
 
+const initialState: AppState = {
+  cats: [],
+  branches: [],
+  events: [],
+  teamPresets: [],
+  collars: DEFAULT_COLLARS,
+  user: null,
+  loading: true
+};
+
+const StateContext = createContext<ReturnType<typeof useAppStateInternal> | null>(null);
+
 const useAppStateInternal = () => {
-  const [users, setUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem(USERS_KEY);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [state, setState] = useState<AppState>(initialState);
 
-  const [state, setState] = useState<AppState>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Migration: Ensure tags exist if migrating from old flags
-      parsed.cats = parsed.cats.map((c: any) => ({
-        ...c,
-        tags: c.tags || [
-          ...(c.flags?.forBattle ? ['Боец'] : []),
-          ...(c.flags?.forBreeding ? ['Племя'] : [])
-        ]
-      }));
-      return parsed;
+  const loadData = useCallback(async (userId: string) => {
+    setState(s => ({ ...s, loading: true }));
+    const [branchesRes, catsRes, eventsRes, presetsRes] = await Promise.all([
+      supabase.from('branches').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+      supabase.from('cats').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+      supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+      supabase.from('team_presets').select('*').eq('user_id', userId).order('created_at', { ascending: true })
+    ]);
+
+    const branches: Branch[] = branchesRes.data || [];
+    // Seed default branches for new user
+    if (branches.length === 0) {
+      const seed = INITIAL_BRANCHES.map(({ name, color, notes }) => ({ name, color, notes, user_id: userId }));
+      const inserted = await supabase.from('branches').insert(seed).select();
+      if (!inserted.error && inserted.data) branches.push(...inserted.data as Branch[]);
     }
-    return {
-      cats: [],
-      branches: INITIAL_BRANCHES,
-      events: [],
-      teamPresets: [],
-      collars: DEFAULT_COLLARS,
-      user: null
-    };
-  });
+
+    setState(s => ({
+      ...s,
+      branches,
+      cats: (catsRes.data || []).map(supabaseCatToModel),
+      events: (eventsRes.data || []).map(supabaseEventToModel),
+      teamPresets: (presetsRes.data as TeamPreset[]) || [],
+      loading: false
+    }));
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const user: User = { id: session.user.id, email: session.user.email || '' };
+        setState(s => ({ ...s, user }));
+        await loadData(user.id);
+      } else {
+        setState(initialState);
+      }
+    });
+    // check existing session
+    supabase.auth.getSession().then(({ data }) => {
+      const session = data.session;
+      if (session?.user) {
+        const user: User = { id: session.user.id, email: session.user.email || '' };
+        setState(s => ({ ...s, user }));
+        loadData(user.id);
+      } else {
+        setState(s => ({ ...s, loading: false }));
+      }
+    });
+    return () => listener?.subscription.unsubscribe();
+  }, [loadData]);
 
-  useEffect(() => {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  }, [users]);
-
-  const register = (email: string, password: string) => {
-    if (users.find(u => u.email === email)) {
-      throw new Error('Пользователь с таким email уже существует');
-    }
-    const newUser = { email, password };
-    setUsers([...users, newUser]);
-    setState(s => ({ ...s, user: { email } }));
+  const requireUser = () => {
+    if (!state.user) throw new Error('Нужна авторизация');
+    return state.user;
   };
 
-  const login = (email: string, password: string) => {
-    const found = users.find(u => u.email === email && u.password === password);
-    if (!found) {
-      throw new Error('Неверный email или пароль');
-    }
-    setState(s => ({ ...s, user: { email } }));
+  const register = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error || !data.user) throw error || new Error('Регистрация не удалась');
+    const user: User = { id: data.user.id, email: data.user.email || '' };
+    setState(s => ({ ...s, user }));
+    await loadData(user.id);
   };
 
-  const logout = () => setState(s => ({ ...s, user: null }));
-
-  const addBranch = (name: string, color: string) => {
-    const newBranch: Branch = { id: crypto.randomUUID(), name, color };
-    setState(s => ({ ...s, branches: [...s.branches, newBranch] }));
+  const login = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) throw error || new Error('Неверный email или пароль');
+    const user: User = { id: data.user.id, email: data.user.email || '' };
+    setState(s => ({ ...s, user }));
+    await loadData(user.id);
   };
 
-  const addCat = (catData: Omit<Cat, 'id' | 'createdAt' | 'updatedAt' | 'isArchived'>) => {
-    const newCat: Cat = {
-      ...catData,
-      id: crypto.randomUUID(),
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setState(initialState);
+  };
+
+  const addBranch = async (name: string, color: string) => {
+    const user = requireUser();
+    const { data, error } = await supabase.from('branches').insert({ name, color, user_id: user.id }).select().single();
+    if (error) throw error;
+    setState(s => ({ ...s, branches: [...s.branches, data as Branch] }));
+  };
+
+  const addCat = async (catData: Omit<Cat, 'id' | 'createdAt' | 'updatedAt' | 'isArchived'>) => {
+    const user = requireUser();
+    const payload = {
+      ...modelCatToSupabase(catData),
+      user_id: user.id,
+      is_archived: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
-    setState(s => ({ ...s, cats: [...s.cats, newCat] }));
-    return newCat;
+    const { data, error } = await supabase.from('cats').insert(payload).select().single();
+    if (error) throw error;
+    const cat = supabaseCatToModel(data as any);
+    setState(s => ({ ...s, cats: [...s.cats, cat] }));
+    return cat;
   };
 
-  const updateCat = (id: string, updates: Partial<Cat>) => {
+  const updateCat = async (id: string, updates: Partial<Cat>) => {
+    const user = requireUser();
+    const payload: any = { ...modelCatToSupabase(updates), updated_at: new Date().toISOString() };
+    const { data, error } = await supabase.from('cats').update(payload).eq('id', id).eq('user_id', user.id).select().single();
+    if (error) throw error;
+    const updated = supabaseCatToModel(data as any);
     setState(s => ({
       ...s,
-      cats: s.cats.map(c => c.id === id ? { ...c, ...updates, updatedAt: Date.now() } : c)
+      cats: s.cats.map(c => c.id === id ? updated : c)
     }));
   };
 
-  const archiveCat = (id: string) => {
-    setState(s => ({
-      ...s,
-      cats: s.cats.map(c => c.id === id ? { 
-        ...c, 
-        isArchived: true, 
-        equippedCollarId: null, // Unequip collar when archived
-        updatedAt: Date.now() 
-      } : c)
-    }));
-  };
+  const archiveCat = async (id: string) => updateCat(id, { isArchived: true, equippedCollarId: null });
+  const unarchiveCat = async (id: string) => updateCat(id, { isArchived: false });
 
-  const unarchiveCat = (id: string) => {
-    setState(s => ({
-      ...s,
-      cats: s.cats.map(c => c.id === id ? { ...c, isArchived: false, updatedAt: Date.now() } : c)
-    }));
-  };
-
-  const deleteCat = (id: string) => {
+  const deleteCat = async (id: string) => {
+    const user = requireUser();
+    const { error } = await supabase.from('cats').delete().eq('id', id).eq('user_id', user.id);
+    if (error) throw error;
     setState(s => ({
       ...s,
       cats: s.cats.filter(c => c.id !== id),
@@ -123,24 +154,34 @@ const useAppStateInternal = () => {
     }));
   };
 
-  const addEvent = (eventData: Omit<CatEvent, 'id' | 'createdAt' | 'isActive'>) => {
-    const newEvent: CatEvent = {
+  const addEvent = async (eventData: Omit<CatEvent, 'id' | 'createdAt' | 'isActive'>) => {
+    const user = requireUser();
+    const payload = {
       ...eventData,
-      id: crypto.randomUUID(),
-      isActive: true,
-      createdAt: Date.now()
+      user_id: user.id,
+      is_active: true,
+      created_at: new Date().toISOString()
     };
-    setState(s => ({ ...s, events: [...s.events, newEvent] }));
+    const { data, error } = await supabase.from('events').insert(payload).select().single();
+    if (error) throw error;
+    const ev = supabaseEventToModel(data as any);
+    setState(s => ({ ...s, events: [...s.events, ev] }));
   };
 
-  const toggleEvent = (id: string) => {
-    setState(s => ({
-      ...s,
-      events: s.events.map(e => e.id === id ? { ...e, isActive: !e.isActive } : e)
-    }));
+  const toggleEvent = async (id: string) => {
+    const user = requireUser();
+    const current = state.events.find(e => e.id === id);
+    if (!current) return;
+    const { data, error } = await supabase.from('events').update({ is_active: !current.isActive }).eq('id', id).eq('user_id', user.id).select().single();
+    if (error) throw error;
+    const ev = supabaseEventToModel(data as any);
+    setState(s => ({ ...s, events: s.events.map(e => e.id === id ? ev : e) }));
   };
 
-  const deleteEvent = (id: string) => {
+  const deleteEvent = async (id: string) => {
+    const user = requireUser();
+    const { error } = await supabase.from('events').delete().eq('id', id).eq('user_id', user.id);
+    if (error) throw error;
     setState(s => ({ ...s, events: s.events.filter(e => e.id !== id) }));
   };
 
@@ -198,8 +239,54 @@ const useAppStateInternal = () => {
   };
 };
 
-type AppStateValue = ReturnType<typeof useAppStateInternal>;
-const StateContext = createContext<AppStateValue | null>(null);
+const supabaseCatToModel = (row: any): Cat => ({
+  id: row.id,
+  branchId: row.branch_id,
+  name: row.name,
+  age: row.age,
+  level: row.level,
+  temperament: row.temperament as Temperament,
+  genesStats: row.genes_stats || {},
+  tags: row.tags || [],
+  loveCatId: row.love_cat_id,
+  enemyCatId: row.enemy_cat_id,
+  motherId: row.mother_id,
+  fatherId: row.father_id,
+  equippedCollarId: row.equipped_collar_id,
+  isArchived: row.is_archived,
+  createdAt: Date.parse(row.created_at),
+  updatedAt: Date.parse(row.updated_at)
+});
+
+const modelCatToSupabase = (cat: Partial<Cat>) => ({
+  branch_id: cat.branchId,
+  name: cat.name,
+  age: cat.age,
+  level: cat.level,
+  temperament: cat.temperament,
+  genes_stats: cat.genesStats,
+  tags: cat.tags,
+  love_cat_id: cat.loveCatId,
+  enemy_cat_id: cat.enemyCatId,
+  mother_id: cat.motherId,
+  father_id: cat.fatherId,
+  equipped_collar_id: cat.equippedCollarId,
+  is_archived: cat.isArchived
+});
+
+const supabaseEventToModel = (row: any): CatEvent => ({
+  id: row.id,
+  catId: row.cat_id,
+  type: row.type as EventType,
+  statKey: row.stat_key,
+  delta: row.delta,
+  relKind: row.rel_kind as RelationshipKind,
+  relFrom: row.rel_from,
+  relTo: row.rel_to,
+  note: row.note,
+  isActive: row.is_active,
+  createdAt: Date.parse(row.created_at)
+});
 
 export const StateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const value = useAppStateInternal();

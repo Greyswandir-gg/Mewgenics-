@@ -13,8 +13,17 @@ View your app in AI Studio: https://ai.studio/apps/drive/1atZvzYXwCpbMqvxRFgBbIW
 **Prerequisites:**  Node.js
 
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. Install dependencies: `npm install`
+2. Create a Supabase project. Copy the Project URL and `anon` API key.
+3. Run the SQL in `supabase.sql` via Supabase SQL Editor (или `supabase db push`).
+4. Create `.env` with frontend creds (Vite uses `VITE_` prefix):
+   ```
+   VITE_SUPABASE_URL=https://<your-project>.supabase.co
+   VITE_SUPABASE_ANON_KEY=<your_anon_key>
+   ```
+5. Start dev: `npm run dev`
+
+### Что внутри теперь
+- Auth и хранение данных через Supabase (RLS по пользователю).  
+- Таблицы: `branches`, `cats`, `events`, `team_presets`. Коллеции «ошейники» остаются статическими в клиенте.  
+- После первого входа пользователю автоматически создаются 2 базовые ветки из `INITIAL_BRANCHES`.

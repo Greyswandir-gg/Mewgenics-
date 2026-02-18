@@ -42,25 +42,25 @@ const CatDetailView: React.FC = () => {
     setIsEditing(true);
   };
 
-  const saveEdit = () => {
-    updateCat(cat.id, editData);
+  const saveEdit = async () => {
+    await updateCat(cat.id, editData);
     setIsEditing(false);
   };
 
-  const handleAddEvent = (e: React.FormEvent) => {
+  const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEvent.statKey) return;
-    addEvent({ catId: cat.id, ...newEvent });
+    await addEvent({ catId: cat.id, ...newEvent });
     setShowEventForm(false);
     setNewEvent({...newEvent, note: '', delta: 1});
   };
 
-  const handleEquipCollar = (cid: string | null) => {
-    updateCat(cat.id, { equippedCollarId: cid });
+  const handleEquipCollar = async (cid: string | null) => {
+    await updateCat(cat.id, { equippedCollarId: cid });
     setSandboxCollarId(undefined as any);
   };
 
-  const toggleTag = (tag: string) => {
+  const toggleTag = async (tag: string) => {
     const currentTags = isEditing ? editData.tags : cat.tags;
     const newTags = currentTags.includes(tag) 
       ? currentTags.filter((t: string) => t !== tag)
@@ -69,11 +69,11 @@ const CatDetailView: React.FC = () => {
     if (isEditing) {
       setEditData({ ...editData, tags: newTags });
     } else {
-      updateCat(cat.id, { tags: newTags });
+      await updateCat(cat.id, { tags: newTags });
     }
   };
 
-  const addNewTag = () => {
+  const addNewTag = async () => {
     if (!newTag.trim()) return;
     const currentTags = isEditing ? editData.tags : cat.tags;
     if (!currentTags.includes(newTag.trim())) {
@@ -81,7 +81,7 @@ const CatDetailView: React.FC = () => {
       if (isEditing) {
         setEditData({ ...editData, tags: updatedTags });
       } else {
-        updateCat(cat.id, { tags: updatedTags });
+        await updateCat(cat.id, { tags: updatedTags });
       }
     }
     setNewTag('');
@@ -92,7 +92,7 @@ const CatDetailView: React.FC = () => {
       {cat.isArchived && (
         <div className="bg-orange-100 border-4 border-black p-6 mb-10 text-center font-black uppercase tracking-widest text-2xl sketch-border flex items-center justify-center gap-6">
           📜 ЗАСЛУЖЕННЫЙ ВЕТЕРАН АРХИВА
-          <button onClick={() => unarchiveCat(cat.id)} className="text-sm bg-black text-white px-4 py-1 italic hover:bg-zinc-800 transition sketch-border-sm">Вернуть в питомник</button>
+          <button onClick={async () => { await unarchiveCat(cat.id); }} className="text-sm bg-black text-white px-4 py-1 italic hover:bg-zinc-800 transition sketch-border-sm">Вернуть в питомник</button>
         </div>
       )}
 
@@ -307,7 +307,7 @@ const CatDetailView: React.FC = () => {
                           {ev.delta! > 0 ? `+${ev.delta}` : ev.delta}
                         </span>
                       </div>
-                      <button onClick={() => deleteEvent(ev.id)} className="text-[10px] font-black uppercase text-red-900 hover:bg-red-50 px-2 py-1 border border-black/20">Удалить</button>
+                      <button onClick={async () => { await deleteEvent(ev.id); }} className="text-[10px] font-black uppercase text-red-900 hover:bg-red-50 px-2 py-1 border border-black/20">Удалить</button>
                     </div>
                     {ev.note && <div className="mt-2 text-xs italic border-t-2 border-black/10 pt-2 font-bold opacity-80">{ev.note}</div>}
                   </div>
@@ -323,9 +323,9 @@ const CatDetailView: React.FC = () => {
         <div className="flex gap-6">
           {!cat.isArchived && (
             <button 
-              onClick={() => {
+              onClick={async () => {
                 if (confirm('Отправить кота на покой? Ошейник будет снят, а сам кот уйдет из активного списка "Питомник" в "Архив".')) {
-                  archiveCat(cat.id);
+                  await archiveCat(cat.id);
                   navigate('/');
                 }
               }} 
@@ -335,9 +335,9 @@ const CatDetailView: React.FC = () => {
             </button>
           )}
           <button 
-            onClick={() => {
-              if (confirm('ВНИМАНИЕ: Это удалит кота из базы навсегда!')) {
-                deleteCat(cat.id);
+            onClick={async () => {
+                if (confirm('ВНИМАНИЕ: Это удалит кота из базы навсегда!')) {
+                await deleteCat(cat.id);
                 navigate('/');
               }
             }} 

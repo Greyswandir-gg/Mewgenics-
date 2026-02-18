@@ -67,12 +67,12 @@ const LoginView: React.FC = () => {
     setError('');
     try {
       if (isRegistering) {
-        register(email, password);
+        await register(email, password);
       } else {
-        login(email, password);
+        await login(email, password);
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'РћС€РёР±РєР° Р°РІС‚РѕСЂРёР·Р°С†РёРё');
     }
   };
 
@@ -133,7 +133,15 @@ const LoginView: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { user } = useAppState();
+  const { user, loading } = useAppState();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-black font-black uppercase text-xl">
+        Загрузка...
+      </div>
+    );
+  }
 
   if (!user) {
     return <LoginView />;

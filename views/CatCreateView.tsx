@@ -25,10 +25,10 @@ const CatCreateView: React.FC = () => {
     fatherId: null as string | null,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.branchId) return;
-    const cat = addCat({
+    const cat = await addCat({
       ...formData,
       loveCatId: null,
       enemyCatId: null,
