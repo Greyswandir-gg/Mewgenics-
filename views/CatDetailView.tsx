@@ -181,14 +181,6 @@ const CatDetailView: React.FC = () => {
               )}
             </div>
             <div className="bg-zinc-50 p-4 border-2 border-black shadow-inner">
-              <span className="text-[11px] opacity-40 block mb-2">Возраст:</span>
-              {isEditing ? (
-                <input type="number" className="w-full text-xl font-black p-2 border-black border-2 bg-white" value={editData.age} onChange={e => setEditData({...editData, age: parseInt(e.target.value) || 0})} />
-              ) : (
-                <span className="text-2xl italic">{cat.age || 0}</span>
-              )}
-            </div>
-            <div className="bg-zinc-50 p-4 border-2 border-black shadow-inner">
               <span className="text-[11px] opacity-40 block mb-2">Пол:</span>
               {isEditing ? (
                 <select

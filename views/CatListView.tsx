@@ -166,7 +166,6 @@ const CatListView: React.FC = () => {
               <div className="mt-8 pt-4 border-t-2 border-black border-dashed flex justify-between items-center text-[10px] font-black text-black uppercase tracking-widest opacity-60">
                 <span>УР. {cat.level || 1}</span>
                 <span>ПОЛ: {cat.gender === 'male' ? 'М' : cat.gender === 'female' ? 'Ж' : '?'}</span>
-                <span>ВЗ. {cat.age || 0}</span>
               </div>
             </Link>
           );

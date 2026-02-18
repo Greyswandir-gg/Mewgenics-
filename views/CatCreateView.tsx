@@ -90,15 +90,6 @@ const CatCreateView: React.FC = () => {
                     onChange={e => setFormData({...formData, level: parseInt(e.target.value) || 1})}
                   />
                 </div>
-                <div className="flex-1">
-                  <label className="block text-[10px] font-black text-black uppercase mb-1 ml-1 opacity-60">Возраст</label>
-                  <input 
-                    type="number" 
-                    className="w-full bg-[#fdf6e3] border-4 border-black px-4 py-3 font-black text-black focus:outline-none sketch-border-sm"
-                    value={formData.age}
-                    onChange={e => setFormData({...formData, age: parseInt(e.target.value) || 0})}
-                  />
-                </div>
               </div>
               <div>
                 <label className="block text-[10px] font-black text-black uppercase mb-1 ml-1 opacity-60">Пол</label>
