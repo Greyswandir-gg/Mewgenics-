@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAppState } from '../state';
 import { STAT_DEFS } from '../constants';
 import GameIcon from '../components/GameIcon';
@@ -40,6 +40,33 @@ const TeamBuilderView: React.FC = () => {
     return acc;
   }, {} as Record<string, number>);
 
+  const bestCombos = useMemo(() => {
+    if (teamMembers.length === 0) return [];
+    const collarOptions = [null, ...collars.map(c => c.id)];
+    const results: { score: number; picks: { catName: string; collarName: string }[] }[] = [];
+
+    const dfs = (idx: number, acc: { score: number; picks: { catName: string; collarName: string }[] }) => {
+      if (idx >= teamMembers.length) {
+        results.push(acc);
+        return;
+      }
+      const member = teamMembers[idx];
+      const cat = cats.find(c => c.id === member.catId);
+      if (!cat) return;
+      collarOptions.forEach(co => {
+        const stats = calculateCatStats(cat, co);
+        const collarName = co ? (collars.find(c => c.id === co)?.name || 'Ошейник') : 'Без ошейника';
+        dfs(idx + 1, {
+          score: acc.score + stats.subjectiveScore,
+          picks: [...acc.picks, { catName: cat.name, collarName }]
+        });
+      });
+    };
+
+    dfs(0, { score: 0, picks: [] });
+    return results.sort((a, b) => b.score - a.score).slice(0, 3);
+  }, [teamMembers, collars, cats, calculateCatStats]);
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-10 border-b-4 border-black pb-4">
@@ -73,12 +100,12 @@ const TeamBuilderView: React.FC = () => {
                   {/* Grid showing all 8 stats - Ensuring full list as requested */}
                   <div className="w-full grid grid-cols-2 gap-x-3 gap-y-1 mb-6 flex-1 bg-white/30 p-2 border-2 border-black/10">
                     {STAT_DEFS.map(def => (
-                      <div key={def.key} className="flex justify-between items-center text-[9px] font-black uppercase border-b border-black/5 pb-1">
+                      <div key={def.key} className="flex justify-between items-center text-sm font-black uppercase border-b border-black/5 pb-1">
                         <div className="flex items-center gap-1">
-                           <GameIcon type={def.icon} size={12} className="opacity-70" />
-                           <span className="opacity-60">{def.name}</span>
+                           <GameIcon type={def.icon} size={14} className="opacity-70" />
+                           <span className="opacity-70">{def.name}</span>
                         </div>
-                        <span className="stat-green mono text-[11px] bg-white px-1">{calculated?.stats[def.key].current}</span>
+                        <span className="stat-green mono text-base bg-white px-2">{calculated?.stats[def.key].current}</span>
                       </div>
                     ))}
                   </div>
@@ -138,14 +165,31 @@ const TeamBuilderView: React.FC = () => {
 
         <div className="bg-[#fff9f0] border-4 border-black sketch-border p-10 shadow-xl">
           <h2 className="text-3xl font-black uppercase italic mb-6 border-b-4 border-black pb-3 flex items-center gap-3">
-            <GameIcon type="cha" size={32} /> TEAM TIPS
+            <GameIcon type="cha" size={32} /> ТОП КОМБИНАЦИИ
           </h2>
-          <p className="text-black font-black italic leading-tight mb-4">
-            Pick a goal: burst (STR/CON), speed (DEX/SPEED), or hybrid (LUCK/INT). Try collars in slots to see final stats instantly.
-          </p>
-          <p className="text-black font-black italic leading-tight">
-            Data is stored in Supabase per email. After sign-in you will see your branches, cats, and events.
-          </p>
+          {teamMembers.length === 0 ? (
+            <p className="text-black font-black italic opacity-50 text-lg text-center">Выбери до 4 бойцов чтобы рассчитать связки</p>
+          ) : (
+            <div className="space-y-4">
+              {bestCombos.length === 0 && <p className="text-black font-black italic opacity-50">Нет подходящих комбинаций</p>}
+              {bestCombos.map((combo, idx) => (
+                <div key={idx} className="border-2 border-black bg-white/70 p-3 sketch-border-sm">
+                  <div className="flex justify-between items-center font-black text-sm uppercase mb-2">
+                    <span>#{idx + 1}</span>
+                    <span className="text-lg">Счёт: {combo.score}</span>
+                  </div>
+                  <ul className="text-sm leading-tight space-y-1">
+                    {combo.picks.map((p, i) => (
+                      <li key={i} className="flex justify-between">
+                        <span className="font-black">{p.catName}</span>
+                        <span className="opacity-70">{p.collarName}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>
