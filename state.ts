@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { supabase } from './supabaseClient';
-import { Cat, Branch, CatEvent, Collar, TeamPreset, Temperament, EventType, RelationshipKind, User } from './types';
+import { Cat, Branch, CatEvent, Collar, TeamPreset, Temperament, EventType, RelationshipKind, User, TagPreset } from './types';
 import { DEFAULT_COLLARS, STAT_DEFS, INITIAL_BRANCHES } from './constants';
 
 interface AppState {
@@ -9,6 +9,7 @@ interface AppState {
   events: CatEvent[];
   teamPresets: TeamPreset[];
   collars: Collar[];
+  tagPresets: TagPreset[];
   user: User | null;
   loading: boolean;
 }
@@ -19,6 +20,7 @@ const initialState: AppState = {
   events: [],
   teamPresets: [],
   collars: DEFAULT_COLLARS,
+  tagPresets: [],
   user: null,
   loading: true
 };
@@ -30,11 +32,12 @@ const useAppStateInternal = () => {
 
   const loadData = useCallback(async (userId: string) => {
     setState(s => ({ ...s, loading: true }));
-    const [branchesRes, catsRes, eventsRes, presetsRes] = await Promise.all([
+    const [branchesRes, catsRes, eventsRes, presetsRes, tagsRes] = await Promise.all([
       supabase.from('branches').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
       supabase.from('cats').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
       supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-      supabase.from('team_presets').select('*').eq('user_id', userId).order('created_at', { ascending: true })
+      supabase.from('team_presets').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+      supabase.from('tag_presets').select('*').eq('user_id', userId).order('name', { ascending: true })
     ]);
 
     const branches: Branch[] = branchesRes.data || [];
@@ -51,6 +54,7 @@ const useAppStateInternal = () => {
       cats: (catsRes.data || []).map(supabaseCatToModel),
       events: (eventsRes.data || []).map(supabaseEventToModel),
       teamPresets: (presetsRes.data as TeamPreset[]) || [],
+      tagPresets: (tagsRes.data as TagPreset[]) || [],
       loading: false
     }));
   }, []);
@@ -185,6 +189,20 @@ const useAppStateInternal = () => {
     setState(s => ({ ...s, events: s.events.filter(e => e.id !== id) }));
   };
 
+  const addTagPreset = async (name: string, color: string) => {
+    const user = requireUser();
+    const { data, error } = await supabase.from('tag_presets').insert({ name, color, user_id: user.id }).select().single();
+    if (error) throw error;
+    setState(s => ({ ...s, tagPresets: [...s.tagPresets, data as TagPreset] }));
+  };
+
+  const deleteTagPreset = async (id: string) => {
+    const user = requireUser();
+    const { error } = await supabase.from('tag_presets').delete().eq('id', id).eq('user_id', user.id);
+    if (error) throw error;
+    setState(s => ({ ...s, tagPresets: s.tagPresets.filter(t => t.id !== id) }));
+  };
+
   const calculateCatStats = (cat: Cat, sandboxCollarId?: string | null) => {
     const activeEvents = state.events.filter(e => e.catId === cat.id && e.isActive && e.statKey);
     const collarId = sandboxCollarId !== undefined ? sandboxCollarId : cat.equippedCollarId;
@@ -235,6 +253,8 @@ const useAppStateInternal = () => {
     addEvent,
     toggleEvent,
     deleteEvent,
+    addTagPreset,
+    deleteTagPreset,
     calculateCatStats
   };
 };
@@ -254,6 +274,7 @@ const supabaseCatToModel = (row: any): Cat => ({
   fatherId: row.father_id,
   equippedCollarId: row.equipped_collar_id,
   isArchived: row.is_archived,
+  gender: (row.gender as any) || 'unknown',
   createdAt: Date.parse(row.created_at),
   updatedAt: Date.parse(row.updated_at)
 });
@@ -271,7 +292,8 @@ const modelCatToSupabase = (cat: Partial<Cat>) => ({
   mother_id: cat.motherId,
   father_id: cat.fatherId,
   equipped_collar_id: cat.equippedCollarId,
-  is_archived: cat.isArchived
+  is_archived: cat.isArchived,
+  gender: cat.gender
 });
 
 const supabaseEventToModel = (row: any): CatEvent => ({

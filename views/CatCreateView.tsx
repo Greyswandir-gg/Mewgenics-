@@ -8,7 +8,7 @@ import GameIcon from '../components/GameIcon';
 
 const CatCreateView: React.FC = () => {
   const navigate = useNavigate();
-  const { branches, addCat, cats } = useAppState();
+  const { branches, addCat, cats, tagPresets } = useAppState();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -16,6 +16,7 @@ const CatCreateView: React.FC = () => {
     age: 0,
     level: 1,
     temperament: Temperament.NORMAL,
+    gender: 'unknown' as 'male' | 'female' | 'unknown',
     genesStats: STAT_DEFS.reduce((acc, def) => {
       if (!def.isDerived) acc[def.key] = 10;
       return acc;
@@ -100,6 +101,18 @@ const CatCreateView: React.FC = () => {
                 </div>
               </div>
               <div>
+                <label className="block text-[10px] font-black text-black uppercase mb-1 ml-1 opacity-60">Пол</label>
+                <select 
+                  className="w-full bg-[#fdf6e3] border-4 border-black px-4 py-3 font-black text-black focus:outline-none sketch-border-sm uppercase text-xs"
+                  value={formData.gender}
+                  onChange={e => setFormData({ ...formData, gender: e.target.value as any })}
+                >
+                  <option value="male">Муж</option>
+                  <option value="female">Жен</option>
+                  <option value="unknown">?</option>
+                </select>
+              </div>
+              <div>
                 <label className="block text-[10px] font-black text-black uppercase mb-1 ml-1 opacity-60">Характер</label>
                 <select 
                   className="w-full bg-[#fdf6e3] border-4 border-black px-4 py-3 font-black text-black focus:outline-none sketch-border-sm uppercase text-xs"
@@ -168,7 +181,18 @@ const CatCreateView: React.FC = () => {
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-3">
+            {tagPresets.map(tag => (
+              <button 
+                key={tag.id}
+                type="button"
+                onClick={() => toggleInitialTag(tag.name)}
+                className={`flex items-center gap-2 px-4 py-2 border-4 border-black font-black uppercase text-xs sketch-border-sm transition ${formData.tags.includes(tag.name) ? '' : 'opacity-60'}`}
+                style={{ backgroundColor: formData.tags.includes(tag.name) ? tag.color : '#fff' }}
+              >
+                {tag.name}
+              </button>
+            ))}
             <button 
               type="button"
               onClick={() => toggleInitialTag('Боец')}

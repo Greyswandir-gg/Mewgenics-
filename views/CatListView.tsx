@@ -5,16 +5,28 @@ import { useAppState } from '../state';
 import GameIcon from '../components/GameIcon';
 
 const CatListView: React.FC = () => {
-  const { cats, branches, calculateCatStats } = useAppState();
+  const { cats, branches, calculateCatStats, tagPresets } = useAppState();
   const [search, setSearch] = useState('');
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
   const [showArchived, setShowArchived] = useState(false);
+  const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female' | 'unknown'>('all');
+  const [minScore, setMinScore] = useState(0);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const availableTags = Array.from(new Set([
+    ...tagPresets.map(t => t.name),
+    ...cats.flatMap(c => c.tags || [])
+  ])).filter(Boolean);
 
   const filteredCats = cats.filter(cat => {
     const matchesSearch = cat.name.toLowerCase().includes(search.toLowerCase());
     const matchesBranch = selectedBranch === 'all' || cat.branchId === selectedBranch;
     const matchesArchive = showArchived ? cat.isArchived : !cat.isArchived;
-    return matchesSearch && matchesBranch && matchesArchive;
+    const { subjectiveScore } = calculateCatStats(cat);
+    const matchesScore = subjectiveScore >= minScore;
+    const matchesGender = genderFilter === 'all' || cat.gender === genderFilter;
+    const matchesTags = selectedTags.length === 0 || selectedTags.every(t => cat.tags.includes(t));
+    return matchesSearch && matchesBranch && matchesArchive && matchesScore && matchesGender && matchesTags;
   });
 
   return (
@@ -54,6 +66,47 @@ const CatListView: React.FC = () => {
             {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
 
+          <select
+            className="border-4 border-black px-4 py-2 text-sm bg-white font-black uppercase focus:ring-0 focus:outline-none sketch-border-sm"
+            value={genderFilter}
+            onChange={(e) => setGenderFilter(e.target.value as any)}
+          >
+            <option value="all">Пол: любой</option>
+            <option value="male">Муж</option>
+            <option value="female">Жен</option>
+            <option value="unknown">?</option>
+          </select>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase opacity-60">Оценка ≥</span>
+            <input
+              type="number"
+              min={0}
+              max={10}
+              className="w-16 border-4 border-black px-3 py-2 text-sm bg-white font-black uppercase focus:ring-0 focus:outline-none sketch-border-sm"
+              value={minScore}
+              onChange={(e) => setMinScore(parseInt(e.target.value) || 0)}
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-[10px] font-black uppercase opacity-60">Теги:</span>
+            {availableTags.map(tag => {
+              const active = selectedTags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setSelectedTags(active ? selectedTags.filter(t => t !== tag) : [...selectedTags, tag])}
+                  className={`px-3 py-1 border-2 border-black text-[10px] font-black uppercase sketch-border-sm ${active ? 'bg-black text-white' : 'bg-white'}`}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+            {availableTags.length === 0 && <span className="text-xs opacity-40">нет тегов</span>}
+          </div>
+
           <Link
             to="/cats/new"
             className="bg-black text-white hover:bg-zinc-800 px-8 py-3 border-4 border-black font-black text-sm transition sketch-border uppercase tracking-widest italic"
@@ -76,7 +129,7 @@ const CatListView: React.FC = () => {
             >
               <div className="flex justify-between items-start mb-6 border-b-4 border-black pb-4">
                 <div>
-                  <h3 className="text-3xl font-black text-black uppercase group-hover:underline italic truncate max-w-[160px] tracking-tighter">
+                  <h3 className="text-3xl font-black text-black uppercase group-hover:underline truncate max-w-[160px] tracking-tighter">
                     {cat.name}
                   </h3>
                   <div 
@@ -88,7 +141,7 @@ const CatListView: React.FC = () => {
                 </div>
                 <div className="text-right flex flex-col items-end">
                   <div className="text-[10px] text-black font-black uppercase tracking-tighter mb-1 bg-white px-1 border border-black/10">Оценка</div>
-                  <div className="text-4xl font-black stat-green leading-none mono italic drop-shadow-sm">{subjectiveScore}</div>
+                  <div className="text-4xl font-black stat-green leading-none mono drop-shadow-sm">{subjectiveScore}</div>
                 </div>
               </div>
 
@@ -112,6 +165,7 @@ const CatListView: React.FC = () => {
 
               <div className="mt-8 pt-4 border-t-2 border-black border-dashed flex justify-between items-center text-[10px] font-black text-black uppercase tracking-widest opacity-60">
                 <span>УР. {cat.level || 1}</span>
+                <span>ПОЛ: {cat.gender === 'male' ? 'М' : cat.gender === 'female' ? 'Ж' : '?'}</span>
                 <span>ВЗ. {cat.age || 0}</span>
               </div>
             </Link>

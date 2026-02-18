@@ -66,6 +66,7 @@ export interface Cat {
   name: string;
   age: number;
   level: number;
+  gender: 'male' | 'female' | 'unknown';
   temperament: Temperament;
   genesStats: Record<string, number>;
   tags: string[]; // Replaces fixed flags with flexible tag system
@@ -86,4 +87,10 @@ export interface TeamPreset {
     catId: string;
     sandboxCollarId: string | null;
   }[];
+}
+
+export interface TagPreset {
+  id: string;
+  name: string;
+  color: string;
 }

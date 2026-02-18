@@ -11,7 +11,7 @@ const CatDetailView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { 
-    cats, branches, events, collars, 
+    cats, branches, events, collars, tagPresets,
     calculateCatStats, archiveCat, unarchiveCat, addEvent, deleteEvent, updateCat, deleteCat 
   } = useAppState();
 
@@ -122,11 +122,11 @@ const CatDetailView: React.FC = () => {
 
           <div className="mb-8">
              <label className="text-[10px] font-black uppercase opacity-40 block mb-2">Теги и особенности:</label>
-             <div className="flex flex-wrap gap-2 items-center">
-                {(isEditing ? editData.tags : cat.tags).map((tag: string) => (
-                  <span key={tag} className={`border-2 border-black px-3 py-1 font-black text-[10px] uppercase flex items-center gap-2 shadow-sm ${tag === 'Боец' ? 'bg-red-400' : tag === 'Племя' ? 'bg-blue-400' : 'bg-zinc-200'}`}>
-                    {tag === 'Боец' && <GameIcon type="battle" size={12} />}
-                    {tag === 'Племя' && <GameIcon type="breeding" size={12} />}
+              <div className="flex flex-wrap gap-2 items-center">
+                 {(isEditing ? editData.tags : cat.tags).map((tag: string) => (
+                   <span key={tag} className={`border-2 border-black px-3 py-1 font-black text-[10px] uppercase flex items-center gap-2 shadow-sm ${tag === 'Боец' ? 'bg-red-400' : tag === 'Племя' ? 'bg-blue-400' : 'bg-zinc-200'}`}>
+                     {tag === 'Боец' && <GameIcon type="battle" size={12} />}
+                     {tag === 'Племя' && <GameIcon type="breeding" size={12} />}
                     {tag}
                     <button onClick={() => toggleTag(tag)} className="hover:text-red-900 ml-1 font-bold">✕</button>
                   </span>
@@ -142,8 +142,20 @@ const CatDetailView: React.FC = () => {
                   />
                   <button onClick={addNewTag} className="bg-black text-white text-[12px] p-1 px-3 border-2 border-black font-black">+</button>
                 </div>
-             </div>
-          </div>
+                <div className="flex flex-wrap gap-1 items-center">
+                  {tagPresets.map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => toggleTag(t.name)}
+                      className="px-2 py-1 border-2 border-black text-[10px] uppercase font-black sketch-border-sm"
+                      style={{ backgroundColor: (isEditing ? editData.tags : cat.tags).includes(t.name) ? t.color : '#fff' }}
+                    >
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-black font-black uppercase">
             <div className="bg-zinc-50 p-4 border-2 border-black shadow-inner">
@@ -174,6 +186,22 @@ const CatDetailView: React.FC = () => {
                 <input type="number" className="w-full text-xl font-black p-2 border-black border-2 bg-white" value={editData.age} onChange={e => setEditData({...editData, age: parseInt(e.target.value) || 0})} />
               ) : (
                 <span className="text-2xl italic">{cat.age || 0}</span>
+              )}
+            </div>
+            <div className="bg-zinc-50 p-4 border-2 border-black shadow-inner">
+              <span className="text-[11px] opacity-40 block mb-2">Пол:</span>
+              {isEditing ? (
+                <select
+                  className="w-full text-xs font-black p-2 border-black border-2 bg-white"
+                  value={editData.gender}
+                  onChange={e => setEditData({ ...editData, gender: e.target.value as any })}
+                >
+                  <option value="male">Муж</option>
+                  <option value="female">Жен</option>
+                  <option value="unknown">?</option>
+                </select>
+              ) : (
+                <span className="text-2xl">{cat.gender === 'male' ? 'М' : cat.gender === 'female' ? 'Ж' : '?'}</span>
               )}
             </div>
             <div className="bg-zinc-50 p-4 border-2 border-black shadow-inner">

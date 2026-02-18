@@ -96,3 +96,18 @@ create policy "presets by owner" on public.team_presets
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- Seed default collars on client; no DB table required.
+
+-- Gender for cats
+alter table if exists public.cats add column if not exists gender text default 'unknown';
+
+-- Tag presets
+create table if not exists public.tag_presets (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  color text default '#000000'
+);
+
+alter table public.tag_presets enable row level security;
+create policy "tag_presets by owner" on public.tag_presets
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
