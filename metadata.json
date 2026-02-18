@@ -1,0 +1,7 @@
+{
+  "name": "Mewgenics+",
+  "description": "A comprehensive personal database manager for Mewgenics cats, featuring gene tracking, stat calculation, branch management, and a team builder with sandbox collar testing.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
