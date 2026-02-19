@@ -7,6 +7,7 @@ import GameIcon from '../components/GameIcon';
 const TeamBuilderView: React.FC = () => {
   const { cats, collars, calculateCatStats } = useAppState();
   const [teamMembers, setTeamMembers] = useState<{ catId: string; sandboxCollarId: string | null }[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Filters: Only cats with 'Боец' tag and NO Collar equipped on the real cat object
   const availableCats = cats.filter(c => 
@@ -30,6 +31,30 @@ const TeamBuilderView: React.FC = () => {
     const updated = [...teamMembers];
     updated[index].sandboxCollarId = collarId;
     setTeamMembers(updated);
+  };
+
+  const confirmTeam = async () => {
+    if (teamMembers.length === 0) return;
+    const missing = teamMembers.some(m => !m.sandboxCollarId);
+    if (missing) {
+      alert('У каждого бойца должен быть выбран ошейник.');
+      return;
+    }
+    try {
+      setIsSaving(true);
+      for (const m of teamMembers) {
+        const cat = cats.find(c => c.id === m.catId);
+        if (!cat) continue;
+        const newTags = Array.from(new Set(cat.tags.filter(t => t !== 'для битв').concat(['в бою'])));
+        await useAppState.getState().updateCat(cat.id, { equippedCollarId: m.sandboxCollarId, tags: newTags });
+      }
+      alert('Команда зафиксирована, ошейники надеты, теги обновлены.');
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.message || 'Не удалось сохранить команду');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const teamStats = STAT_DEFS.reduce((acc, def) => {
@@ -91,6 +116,18 @@ const TeamBuilderView: React.FC = () => {
         <h1 className="text-4xl font-black uppercase italic tracking-tighter">Собрание команды</h1>
         <div className="text-black font-black uppercase text-xs opacity-50 underline decoration-2 italic">Рекомендуются коты с тегом "Боец"</div>
       </div>
+
+      {teamMembers.length > 0 && (
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={confirmTeam}
+            disabled={isSaving}
+            className="bg-black text-white px-6 py-3 border-4 border-black font-black uppercase text-sm sketch-border disabled:opacity-50"
+          >
+            {isSaving ? 'Сохраняю...' : 'Подтвердить команду'}
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {[0, 1, 2, 3].map(index => {
