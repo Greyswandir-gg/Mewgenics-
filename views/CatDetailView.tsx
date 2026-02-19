@@ -20,19 +20,41 @@ const GenePanel: React.FC<{ genes: Record<string, number> }> = ({ genes }) => {
   };
 
   return (
-    <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/50">
-      {geneDefs.map(def => {
-        const val = genes[def.key] || 0;
-        return (
-          <div key={def.key} className="flex items-center justify-between border-b border-black/10 pb-3">
-            <div className="flex items-center gap-3">
-              <GameIcon type={def.icon} size={28} className="text-black" />
-              <span className="text-sm font-black uppercase text-black/80">{def.name}</span>
-            </div>
-            <div className={`text-3xl font-black mono ${colorFor(val)}`}>{val}</div>
-          </div>
-        );
-      })}
+    <div className="p-8 space-y-4 bg-white/50">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-3">
+          {['str', 'dex', 'con'].map(key => {
+            const def = geneDefs.find(d => d.key === key);
+            if (!def) return null;
+            const val = genes[def.key] || 0;
+            return (
+              <div key={def.key} className="flex items-center justify-between border-b border-black/10 pb-3">
+                <div className="flex items-center gap-3">
+                  <GameIcon type={def.icon} size={28} className="text-black" />
+                  <span className="text-sm font-black uppercase text-black/80">{def.name}</span>
+                </div>
+                <div className={`text-3xl font-black mono ${colorFor(val)}`}>{val}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="space-y-3">
+          {['int', 'speed', 'cha', 'luck'].map(key => {
+            const def = geneDefs.find(d => d.key === key);
+            if (!def) return null;
+            const val = genes[def.key] || 0;
+            return (
+              <div key={def.key} className="flex items-center justify-between border-b border-black/10 pb-3">
+                <div className="flex items-center gap-3">
+                  <GameIcon type={def.icon} size={28} className="text-black" />
+                  <span className="text-sm font-black uppercase text-black/80">{def.name}</span>
+                </div>
+                <div className={`text-3xl font-black mono ${colorFor(val)}`}>{val}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
@@ -275,10 +297,26 @@ const CatDetailView: React.FC = () => {
           </div>
         </div>
         {statTab === 'stats' ? (
-          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 bg-white/50">
-            {STAT_DEFS.map(def => (
-              <StatDisplay key={def.key} def={def} {...stats[def.key]} />
+          <div className="p-8 space-y-4 bg-white/50">
+            {STAT_DEFS.filter(d => d.isDerived).map(def => (
+              <div key={def.key} className="md:col-span-2">
+                <StatDisplay def={def} {...stats[def.key]} />
+              </div>
             ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
+              <div className="space-y-2">
+                {['str', 'dex', 'con'].map(key => {
+                  const def = STAT_DEFS.find(d => d.key === key)!;
+                  return <StatDisplay key={key} def={def} {...stats[key]} />;
+                })}
+              </div>
+              <div className="space-y-2">
+                {['int', 'speed', 'cha', 'luck'].map(key => {
+                  const def = STAT_DEFS.find(d => d.key === key)!;
+                  return <StatDisplay key={key} def={def} {...stats[key]} />;
+                })}
+              </div>
+            </div>
           </div>
         ) : (
           <GenePanel genes={cat.genesStats} />
