@@ -296,7 +296,7 @@ const CatDetailView: React.FC = () => {
                     <div>
                       <label className="text-[10px] uppercase font-black mb-1 block">Стат:</label>
                       <select className="w-full bg-white border-4 border-black p-2 text-xs font-black uppercase" value={newEvent.statKey} onChange={(e) => setNewEvent({...newEvent, statKey: e.target.value})}>
-                        {STAT_DEFS.map(d => <option key={d.key} value={d.key}>{d.name}</option>)}
+                        {STAT_DEFS.filter(d => !d.isDerived).map(d => <option key={d.key} value={d.key}>{d.name}</option>)}
                       </select>
                     </div>
                     <div>
