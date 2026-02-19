@@ -162,10 +162,12 @@ const useAppStateInternal = () => {
     const user = requireUser();
     const payload = {
       ...eventData,
+      cat_id: (eventData as any).catId,
       user_id: user.id,
       is_active: true,
       created_at: new Date().toISOString()
     };
+    delete (payload as any).catId;
     const { data, error } = await supabase.from('events').insert(payload).select().single();
     if (error) throw error;
     const ev = supabaseEventToModel(data as any);
