@@ -275,7 +275,7 @@ const CatDetailView: React.FC = () => {
           </div>
         </div>
         {statTab === 'stats' ? (
-          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 bg-white/50">
+          <div className="p-8 grid grid-cols-1 gap-y-3 bg-white/50">
             {STAT_DEFS.map(def => (
               <StatDisplay key={def.key} def={def} {...stats[def.key]} />
             ))}
@@ -310,22 +310,33 @@ const CatDetailView: React.FC = () => {
           <div className="bg-white border-4 border-black sketch-border overflow-hidden shadow-xl">
             <div className="bg-zinc-800 text-white px-6 py-3 border-b-2 border-black font-black text-xs uppercase tracking-widest flex justify-between items-center">
               <span>Снаряжение</span>
-              {cat.equippedCollarId && (
-                <button onClick={() => handleEquipCollar(null)} className="text-[10px] text-red-400 font-black hover:underline">Сброс</button>
-              )}
             </div>
             <div className="p-8">
               <label className="text-[10px] uppercase font-black opacity-50 block mb-2">Активный ошейник</label>
-              <select 
-                className="w-full bg-white border-4 border-black p-3 text-sm text-black font-black focus:ring-0 mb-6 sketch-border-sm"
-                value={sandboxCollarId === undefined ? (cat.equippedCollarId || '') : (sandboxCollarId || '')}
-                onChange={(e) => setSandboxCollarId(e.target.value || null)}
-              >
-                <option value="">Без ошейника</option>
-                {collars.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              {sandboxCollarId !== undefined && sandboxCollarId !== cat.equippedCollarId && (
-                <button onClick={() => handleEquipCollar(sandboxCollarId)} className="w-full bg-black text-white font-black py-4 text-sm transition sketch-border uppercase tracking-widest">Экипировать</button>
+              <div className="flex items-center gap-3 mb-4">
+                {cat.equippedCollarId ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-black" style={{ backgroundColor: collars.find(c => c.id === cat.equippedCollarId)?.color || '#ccc' }} />
+                    <span className="text-sm font-black uppercase">{collars.find(c => c.id === cat.equippedCollarId)?.name || 'Неизвестно'}</span>
+                  </>
+                ) : (
+                  <span className="text-sm font-black uppercase text-black/50">Нет ошейника</span>
+                )}
+              </div>
+              {!cat.equippedCollarId && (
+                <>
+                  <select 
+                    className="w-full bg-white border-4 border-black p-3 text-sm text-black font-black focus:ring-0 mb-4 sketch-border-sm"
+                    value={sandboxCollarId === undefined ? '' : (sandboxCollarId || '')}
+                    onChange={(e) => setSandboxCollarId(e.target.value || null)}
+                  >
+                    <option value="">Выбери ошейник</option>
+                    {collars.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  {sandboxCollarId && (
+                    <button onClick={() => handleEquipCollar(sandboxCollarId)} className="w-full bg-black text-white font-black py-4 text-sm transition sketch-border uppercase tracking-widest">Экипировать</button>
+                  )}
+                </>
               )}
             </div>
           </div>

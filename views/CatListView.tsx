@@ -5,7 +5,7 @@ import { useAppState } from '../state';
 import GameIcon from '../components/GameIcon';
 
 const CatListView: React.FC = () => {
-  const { cats, branches, calculateCatStats, tagPresets } = useAppState();
+  const { cats, branches, calculateCatStats, tagPresets, collars } = useAppState();
   const [search, setSearch] = useState('');
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
   const [showArchived, setShowArchived] = useState(false);
@@ -133,6 +133,7 @@ const CatListView: React.FC = () => {
         {filteredCats.map(cat => {
           const { subjectiveScore } = calculateCatStats(cat);
           const branch = branches.find(b => b.id === cat.branchId);
+          const collar = cat.equippedCollarId ? collars.find(c => c.id === cat.equippedCollarId) : null;
           
           return (
             <Link
@@ -152,8 +153,16 @@ const CatListView: React.FC = () => {
                     {branch?.name || 'Бродяга'}
                   </div>
                 </div>
-                <div className="text-right flex flex-col items-end">
-                  <div className="text-[10px] text-black font-black uppercase tracking-tighter mb-1 bg-white px-1 border border-black/10">Оценка</div>
+                <div className="text-right flex flex-col items-end gap-1">
+                  {collar ? (
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 border border-black" style={{ backgroundColor: collar.color || '#ccc' }} />
+                      <span className="text-[10px] font-black uppercase text-black/70">{collar.name}</span>
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-black/40 font-black uppercase">Нет ошейника</div>
+                  )}
+                  <div className="text-[10px] text-black font-black uppercase tracking-tighter bg-white px-1 border border-black/10">Оценка</div>
                   <div className="text-4xl font-black stat-green leading-none mono drop-shadow-sm">{subjectiveScore}</div>
                 </div>
               </div>

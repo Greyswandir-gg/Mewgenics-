@@ -131,7 +131,7 @@ const CatCreateView: React.FC = () => {
               >
                 <option value="">Дикая природа</option>
                 {cats
-                  .filter(c => !c.isArchived && c.gender !== 'male')
+                  .filter(c => !c.isArchived && c.gender === 'female' && c.id !== formData.fatherId && c.id !== (formData as any).id)
                   .map(c => <option key={c.id} value={c.id}>{c.name} {c.tags.includes('Племя') ? '🧬' : ''}</option>)}
               </select>
             </div>
@@ -144,7 +144,7 @@ const CatCreateView: React.FC = () => {
               >
                 <option value="">Дикая природа</option>
                 {cats
-                  .filter(c => !c.isArchived && c.gender !== 'female')
+                  .filter(c => !c.isArchived && c.gender === 'male' && c.id !== formData.motherId && c.id !== (formData as any).id)
                   .map(c => <option key={c.id} value={c.id}>{c.name} {c.tags.includes('Племя') ? '🧬' : ''}</option>)}
               </select>
             </div>
