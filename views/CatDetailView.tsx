@@ -20,7 +20,7 @@ const GenePanel: React.FC<{ genes: Record<string, number> }> = ({ genes }) => {
   };
 
   return (
-    <div className="p-8 grid grid-cols-1 gap-4 bg-white/50">
+    <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/50">
       {geneDefs.map(def => {
         const val = genes[def.key] || 0;
         return (
@@ -275,7 +275,7 @@ const CatDetailView: React.FC = () => {
           </div>
         </div>
         {statTab === 'stats' ? (
-          <div className="p-8 grid grid-cols-1 gap-y-3 bg-white/50">
+          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 bg-white/50">
             {STAT_DEFS.map(def => (
               <StatDisplay key={def.key} def={def} {...stats[def.key]} />
             ))}
