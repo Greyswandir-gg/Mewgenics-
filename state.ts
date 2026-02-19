@@ -267,8 +267,8 @@ const calculateCatStats = (cat: Cat, sandboxCollarId?: string | null) => {
       stats[def.key] = { current, gene, delta: current - gene };
     });
 
-    const combatStats = ['str', 'con', 'dex', 'int', 'speed'];
-    const subjectiveScore = Math.min(...combatStats.map(k => stats[k]?.gene ?? 0));
+    const baseDefs = STAT_DEFS.filter(d => !d.isDerived);
+    const subjectiveScore = baseDefs.reduce((sum, def) => sum + (stats[def.key]?.gene ?? 0), 0);
 
     return { stats, subjectiveScore };
   };
