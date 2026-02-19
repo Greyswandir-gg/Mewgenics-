@@ -43,7 +43,22 @@ const TeamBuilderView: React.FC = () => {
 
   const bestCombos = useMemo(() => {
     if (teamMembers.length === 0) return [];
-    const collarOptions = collars.map(c => c.id);
+    const combatKeys = ['str', 'con', 'dex', 'int', 'speed'];
+
+    // Для каждого кота берём пул лучших ошейников (баланс: поднимает минимум статов)
+    const topCollarsPerCat: Record<string, { collarId: string; collarName: string; score: number }[]> = {};
+    teamMembers.forEach(m => {
+      const cat = cats.find(c => c.id === m.catId);
+      if (!cat) return;
+      const ranked = collars.map(col => {
+        const stats = calculateCatStats(cat, col.id);
+        const minStat = Math.min(...combatKeys.map(k => stats.stats[k]?.current ?? 0));
+        const sumStat = combatKeys.reduce((s, k) => s + (stats.stats[k]?.current ?? 0), 0);
+        return { collarId: col.id, collarName: col.name, score: minStat, tie: sumStat };
+      }).sort((a, b) => b.score !== a.score ? b.score - a.score : b.tie - a.tie);
+      topCollarsPerCat[cat.id] = ranked.slice(0, 3); // пул
+    });
+
     const results: { score: number; picks: { catName: string; collarName: string; collarId: string }[] }[] = [];
 
     const dfs = (idx: number, used: Set<string>, acc: { score: number; picks: { catName: string; collarName: string; collarId: string }[] }) => {
@@ -54,17 +69,15 @@ const TeamBuilderView: React.FC = () => {
       const member = teamMembers[idx];
       const cat = cats.find(c => c.id === member.catId);
       if (!cat) return;
-      collarOptions.forEach(co => {
-        if (used.has(co)) return; // не даём дубликаты ошейников
-        const stats = calculateCatStats(cat, co);
-        const collar = collars.find(c => c.id === co);
-        if (!collar) return;
-        used.add(co);
+      const options = topCollarsPerCat[cat.id] || [];
+      options.forEach(opt => {
+        if (used.has(opt.collarId)) return; // без дубликатов ошейников
+        used.add(opt.collarId);
         dfs(idx + 1, used, {
-          score: acc.score + stats.subjectiveScore,
-          picks: [...acc.picks, { catName: cat.name, collarName: collar.name, collarId: co }]
+          score: acc.score + opt.score,
+          picks: [...acc.picks, { catName: cat.name, collarName: opt.collarName, collarId: opt.collarId }]
         });
-        used.delete(co);
+        used.delete(opt.collarId);
       });
     };
 
