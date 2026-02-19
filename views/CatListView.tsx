@@ -34,7 +34,7 @@ const CatListView: React.FC = () => {
     const excludeOk = activeTagEntries.filter(([, v]) => v === -1).every(([t]) => !cat.tags.includes(t));
     const matchesTags = includeOk && excludeOk;
     return matchesSearch && matchesBranch && matchesArchive && matchesScore && matchesGender && matchesTags;
-  });
+  }).sort((a, b) => b.createdAt - a.createdAt);
 
   return (
     <div className="p-4 md:p-8">
