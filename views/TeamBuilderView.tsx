@@ -179,7 +179,7 @@ const TeamBuilderView: React.FC = () => {
             key={cat.id}
             onClick={() => addMember(cat.id)}
             disabled={teamMembers.length >= 4}
-            className="px-3 py-2 border-2 border-black bg-white font-black text-xs uppercase sketch-border-sm hover:bg-black hover:text-white transition"
+            className={`px-3 py-2 border-2 border-black font-black text-xs uppercase sketch-border-sm transition ${cat.tags.includes('Племя') ? 'bg-blue-200 hover:bg-blue-300' : 'bg-white hover:bg-black hover:text-white'}`}
           >
             + {cat.name}
           </button>
