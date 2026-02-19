@@ -297,22 +297,22 @@ const CatDetailView: React.FC = () => {
           </div>
         </div>
         {statTab === 'stats' ? (
-          <div className="p-8 space-y-6 bg-white/50">
-            <div className="flex flex-wrap gap-4">
+          <div className="p-8 space-y-8 bg-white/50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {STAT_DEFS.filter(d => d.isDerived).map(def => (
-                <div key={def.key} className="min-w-[200px] flex-1 md:flex-none">
+                <div key={def.key} className="md:flex-1">
                   <StatDisplay def={def} {...stats[def.key]} />
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="space-y-3">
                 {['str', 'dex', 'con'].map(key => {
                   const def = STAT_DEFS.find(d => d.key === key)!;
                   return <StatDisplay key={key} def={def} {...stats[key]} />;
                 })}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {['int', 'speed', 'cha', 'luck'].map(key => {
                   const def = STAT_DEFS.find(d => d.key === key)!;
                   return <StatDisplay key={key} def={def} {...stats[key]} />;
