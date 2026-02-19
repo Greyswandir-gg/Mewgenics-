@@ -14,9 +14,10 @@ const CatListView: React.FC = () => {
   // тег: 1 = включить, -1 = исключить, 0/undefined = выключено
   const [tagFilters, setTagFilters] = useState<Record<string, -1 | 0 | 1>>({});
 
+  const sourceCats = showArchived ? cats.filter(c => c.isArchived) : cats.filter(c => !c.isArchived);
   const availableTags = Array.from(new Set([
     ...tagPresets.map(t => t.name),
-    ...cats.flatMap(c => c.tags || [])
+    ...sourceCats.flatMap(c => c.tags || [])
   ])).filter(Boolean);
 
   const filteredCats = cats.filter(cat => {
