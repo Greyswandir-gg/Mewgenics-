@@ -160,12 +160,19 @@ const useAppStateInternal = () => {
 
   const addEvent = async (eventData: Omit<CatEvent, 'id' | 'createdAt' | 'isActive'>) => {
     const user = requireUser();
+    // Normalize delta: buffs always positive, debuffs always negative
+    let normalizedDelta = eventData.delta;
+    if (normalizedDelta != null) {
+      if (eventData.type === EventType.BUFF && normalizedDelta < 0) normalizedDelta = Math.abs(normalizedDelta);
+      if (eventData.type === EventType.DEBUFF && normalizedDelta > 0) normalizedDelta = -Math.abs(normalizedDelta);
+    }
+
     const payload: any = {
       user_id: user.id,
       cat_id: eventData.catId,
       type: eventData.type,
       stat_key: eventData.statKey,
-      delta: eventData.delta,
+      delta: normalizedDelta,
       rel_kind: eventData.relKind,
       rel_from: eventData.relFrom,
       rel_to: eventData.relTo,
