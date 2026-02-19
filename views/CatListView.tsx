@@ -25,7 +25,7 @@ const CatListView: React.FC = () => {
     const { subjectiveScore } = calculateCatStats(cat);
     const minScoreSafe = Number.isFinite(minScore) ? minScore : 0;
     const scoreNum = Number(subjectiveScore) || 0;
-    const matchesScore = scoreNum >= minScoreSafe;
+    const matchesScore = minScoreSafe === 0 ? true : scoreNum === minScoreSafe;
     const matchesGender = genderFilter === 'all' || cat.gender === genderFilter;
     const matchesTags = selectedTags.length === 0 || selectedTags.every(t => cat.tags.includes(t));
     return matchesSearch && matchesBranch && matchesArchive && matchesScore && matchesGender && matchesTags;
