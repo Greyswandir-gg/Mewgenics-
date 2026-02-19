@@ -6,6 +6,36 @@ import { STAT_DEFS } from '../constants';
 import { EventType, Temperament } from '../types';
 import StatDisplay from '../components/StatDisplay';
 import GameIcon from '../components/GameIcon';
+const GenePanel: React.FC<{ genes: Record<string, number> }> = ({ genes }) => {
+  const geneDefs = STAT_DEFS.filter(d => !d.isDerived);
+  const values = geneDefs.map(d => genes[d.key] || 0);
+  const sorted = [...values].sort((a, b) => a - b);
+  const minSet = new Set<number>(sorted.slice(0, Math.min(2, sorted.length)));
+  const maxSet = new Set<number>(sorted.slice(-Math.min(2, sorted.length)));
+
+  const colorFor = (val: number) => {
+    if (maxSet.has(val)) return 'text-green-700';
+    if (minSet.has(val)) return 'text-red-700';
+    return 'text-black';
+  };
+
+  return (
+    <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/50">
+      {geneDefs.map(def => {
+        const val = genes[def.key] || 0;
+        return (
+          <div key={def.key} className="flex items-center justify-between border-b border-black/10 pb-3">
+            <div className="flex items-center gap-3">
+              <GameIcon type={def.icon} size={28} className="text-black" />
+              <span className="text-sm font-black uppercase text-black/80">{def.name}</span>
+            </div>
+            <div className={`text-3xl font-black mono ${colorFor(val)}`}>{val}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const CatDetailView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +51,7 @@ const CatDetailView: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<any>(null);
   const [newTag, setNewTag] = useState('');
+  const [statTab, setStatTab] = useState<'stats' | 'genes'>('stats');
 
   const [newEvent, setNewEvent] = useState({
     type: EventType.BUFF,
@@ -223,12 +254,30 @@ const CatDetailView: React.FC = () => {
         <div className="bg-black text-white px-8 py-4 font-black text-sm uppercase tracking-widest italic flex items-center gap-3">
           <GameIcon type="str" size={24} className="text-white" />
           Характеристики и Гены
+          <div className="ml-auto flex gap-2">
+            <button
+              onClick={() => setStatTab('stats')}
+              className={`px-3 py-1 border-2 border-white text-xs font-black ${statTab === 'stats' ? 'bg-white text-black' : 'bg-black text-white'}`}
+            >
+              Статы
+            </button>
+            <button
+              onClick={() => setStatTab('genes')}
+              className={`px-3 py-1 border-2 border-white text-xs font-black ${statTab === 'genes' ? 'bg-white text-black' : 'bg-black text-white'}`}
+            >
+              Гены
+            </button>
+          </div>
         </div>
-        <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 bg-white/50">
-          {STAT_DEFS.map(def => (
-            <StatDisplay key={def.key} def={def} {...stats[def.key]} />
-          ))}
-        </div>
+        {statTab === 'stats' ? (
+          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 bg-white/50">
+            {STAT_DEFS.map(def => (
+              <StatDisplay key={def.key} def={def} {...stats[def.key]} />
+            ))}
+          </div>
+        ) : (
+          <GenePanel genes={cat.genesStats} />
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
