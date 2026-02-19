@@ -81,9 +81,14 @@ const CatDetailView: React.FC = () => {
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEvent.statKey) return;
-    await addEvent({ catId: cat.id, ...newEvent });
-    setShowEventForm(false);
-    setNewEvent({...newEvent, note: '', delta: 1});
+    try {
+      await addEvent({ catId: cat.id, ...newEvent });
+      setShowEventForm(false);
+      setNewEvent({...newEvent, note: '', delta: 1});
+    } catch (err: any) {
+      console.error('Add event error', err);
+      alert(err?.message || 'Не удалось сохранить событие');
+    }
   };
 
   const handleEquipCollar = async (cid: string | null) => {
