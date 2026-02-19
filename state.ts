@@ -118,8 +118,10 @@ const useAppStateInternal = () => {
 
   const addCat = async (catData: Omit<Cat, 'id' | 'createdAt' | 'updatedAt' | 'isArchived'>) => {
     const user = requireUser();
+    // Автотег "для битв" если не указан
+    const ensuredTags = catData.tags.includes('для битв') ? catData.tags : [...catData.tags, 'для битв'];
     const payload = {
-      ...modelCatToSupabase(catData),
+      ...modelCatToSupabase({ ...catData, tags: ensuredTags }),
       user_id: user.id,
       is_archived: false,
       created_at: new Date().toISOString(),

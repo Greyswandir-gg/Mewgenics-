@@ -11,7 +11,8 @@ const CatListView: React.FC = () => {
   const [showArchived, setShowArchived] = useState(false);
   const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female' | 'unknown'>('all');
   const [minScore, setMinScore] = useState(0);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  // тег: 1 = включить, -1 = исключить, 0/undefined = выключено
+  const [tagFilters, setTagFilters] = useState<Record<string, -1 | 0 | 1>>({});
 
   const availableTags = Array.from(new Set([
     ...tagPresets.map(t => t.name),
@@ -27,7 +28,10 @@ const CatListView: React.FC = () => {
     const scoreNum = Number(subjectiveScore) || 0;
     const matchesScore = minScoreSafe === 0 ? true : scoreNum === minScoreSafe;
     const matchesGender = genderFilter === 'all' || cat.gender === genderFilter;
-    const matchesTags = selectedTags.length === 0 || selectedTags.every(t => cat.tags.includes(t));
+    const activeTagEntries = Object.entries(tagFilters).filter(([, v]) => v !== 0 && v !== undefined);
+    const includeOk = activeTagEntries.filter(([, v]) => v === 1).every(([t]) => cat.tags.includes(t));
+    const excludeOk = activeTagEntries.filter(([, v]) => v === -1).every(([t]) => !cat.tags.includes(t));
+    const matchesTags = includeOk && excludeOk;
     return matchesSearch && matchesBranch && matchesArchive && matchesScore && matchesGender && matchesTags;
   });
 
@@ -98,15 +102,18 @@ const CatListView: React.FC = () => {
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-[10px] font-black uppercase opacity-60">Теги:</span>
             {availableTags.map(tag => {
-              const active = selectedTags.includes(tag);
+              const state = tagFilters[tag] || 0; // 0 off, 1 include, -1 exclude
+              const next = state === 0 ? 1 : state === 1 ? -1 : 0;
+              const bg = state === 1 ? 'bg-black text-white' : state === -1 ? 'bg-red-300' : 'bg-white';
+              const outline = state === -1 ? 'ring-2 ring-red-700' : '';
               return (
                 <button
                   key={tag}
                   type="button"
-                  onClick={() => setSelectedTags(active ? selectedTags.filter(t => t !== tag) : [...selectedTags, tag])}
-                  className={`px-3 py-1 border-2 border-black text-[10px] font-black uppercase sketch-border-sm ${active ? 'bg-black text-white' : 'bg-white'}`}
+                  onClick={() => setTagFilters({ ...tagFilters, [tag]: next === 0 ? undefined as any : next })}
+                  className={`px-3 py-1 border-2 border-black text-[10px] font-black uppercase sketch-border-sm ${bg} ${outline}`}
                 >
-                  {tag}
+                  {state === -1 ? '– ' : state === 1 ? '+ ' : ''}{tag}
                 </button>
               );
             })}

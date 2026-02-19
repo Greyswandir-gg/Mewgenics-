@@ -21,7 +21,7 @@ const CatCreateView: React.FC = () => {
       if (!def.isDerived) acc[def.key] = 10;
       return acc;
     }, {} as Record<string, number>),
-    tags: [] as string[],
+    tags: ['для битв'] as string[],
     motherId: null as string | null,
     fatherId: null as string | null,
   });
@@ -130,7 +130,9 @@ const CatCreateView: React.FC = () => {
                 onChange={e => setFormData({...formData, motherId: e.target.value || null})}
               >
                 <option value="">Дикая природа</option>
-                {cats.map(c => <option key={c.id} value={c.id}>{c.name} {c.tags.includes('Племя') ? '🧬' : ''}</option>)}
+                {cats
+                  .filter(c => !c.isArchived && c.gender !== 'male')
+                  .map(c => <option key={c.id} value={c.id}>{c.name} {c.tags.includes('Племя') ? '🧬' : ''}</option>)}
               </select>
             </div>
             <div>
@@ -141,7 +143,9 @@ const CatCreateView: React.FC = () => {
                 onChange={e => setFormData({...formData, fatherId: e.target.value || null})}
               >
                 <option value="">Дикая природа</option>
-                {cats.map(c => <option key={c.id} value={c.id}>{c.name} {c.tags.includes('Племя') ? '🧬' : ''}</option>)}
+                {cats
+                  .filter(c => !c.isArchived && c.gender !== 'female')
+                  .map(c => <option key={c.id} value={c.id}>{c.name} {c.tags.includes('Племя') ? '🧬' : ''}</option>)}
               </select>
             </div>
           </div>
