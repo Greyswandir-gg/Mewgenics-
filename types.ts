@@ -58,6 +58,7 @@ export interface Collar {
   name: string;
   description: string;
   deltas: Record<string, number>;
+  color?: string;
 }
 
 export interface Cat {

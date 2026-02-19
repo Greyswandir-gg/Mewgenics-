@@ -8,6 +8,7 @@ import CatCreateView from './views/CatCreateView';
 import TeamBuilderView from './views/TeamBuilderView';
 import BranchManagementView from './views/BranchManagementView';
 import TagManagementView from './views/TagManagementView';
+import CollarManagementView from './views/CollarManagementView';
 import GameIcon from './components/GameIcon';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -29,6 +30,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <Link to="/" className="hover:bg-zinc-100 px-4 py-2 text-sm font-black text-black uppercase tracking-widest transition">Коты</Link>
                 <Link to="/branches" className="hover:bg-zinc-100 px-4 py-2 text-sm font-black text-black uppercase tracking-widest transition">Ветки</Link>
                 <Link to="/tags" className="hover:bg-zinc-100 px-4 py-2 text-sm font-black text-black uppercase tracking-widest transition">Теги</Link>
+                <Link to="/collars" className="hover:bg-zinc-100 px-4 py-2 text-sm font-black text-black uppercase tracking-widest transition">Ошейники</Link>
                 <Link to="/team" className="hover:bg-zinc-100 px-4 py-2 text-sm font-black text-black uppercase tracking-widest transition italic">Команда</Link>
               </div>
             </div>
@@ -159,6 +161,7 @@ const AppContent: React.FC = () => {
           <Route path="/team" element={<TeamBuilderView />} />
           <Route path="/branches" element={<BranchManagementView />} />
           <Route path="/tags" element={<TagManagementView />} />
+          <Route path="/collars" element={<CollarManagementView />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Layout>

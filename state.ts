@@ -205,6 +205,20 @@ const useAppStateInternal = () => {
     setState(s => ({ ...s, events: s.events.filter(e => e.id !== id) }));
   };
 
+  // Collars (локально)
+  const addCollar = (collar: Collar) => {
+    setState(s => ({ ...s, collars: [...s.collars, collar] }));
+  };
+  const updateCollar = (id: string, updates: Partial<Collar>) => {
+    setState(s => ({
+      ...s,
+      collars: s.collars.map(c => c.id === id ? { ...c, ...updates } : c)
+    }));
+  };
+  const deleteCollar = (id: string) => {
+    setState(s => ({ ...s, collars: s.collars.filter(c => c.id !== id) }));
+  };
+
   const addTagPreset = async (name: string, color: string) => {
     const user = requireUser();
     const { data, error } = await supabase.from('tag_presets').insert({ name, color, user_id: user.id }).select().single();
@@ -219,7 +233,7 @@ const useAppStateInternal = () => {
     setState(s => ({ ...s, tagPresets: s.tagPresets.filter(t => t.id !== id) }));
   };
 
-  const calculateCatStats = (cat: Cat, sandboxCollarId?: string | null) => {
+const calculateCatStats = (cat: Cat, sandboxCollarId?: string | null) => {
     const activeEvents = state.events.filter(e => e.catId === cat.id && e.isActive && e.statKey);
     const collarId = sandboxCollarId !== undefined ? sandboxCollarId : cat.equippedCollarId;
     const collar = state.collars.find(c => c.id === collarId);
@@ -269,6 +283,9 @@ const useAppStateInternal = () => {
     addEvent,
     toggleEvent,
     deleteEvent,
+    addCollar,
+    updateCollar,
+    deleteCollar,
     addTagPreset,
     deleteTagPreset,
     calculateCatStats
