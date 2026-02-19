@@ -1,14 +1,15 @@
-import { StatDef, Collar, Branch } from './types';
+﻿import { StatDef, Collar, Branch } from './types';
 
 export const STAT_DEFS: StatDef[] = [
   { key: 'hp', name: 'ОЗ', icon: 'hp', group: 'left', isDerived: true },
+  { key: 'mana', name: 'Мана', icon: 'mana', group: 'right', isDerived: true },
   { key: 'str', name: 'Сила', icon: 'str', group: 'left' },
   { key: 'dex', name: 'Ловкость', icon: 'dex', group: 'left' },
   { key: 'con', name: 'Телослож.', icon: 'con', group: 'left' },
   { key: 'int', name: 'Разум', icon: 'int', group: 'right' },
   { key: 'speed', name: 'Скорость', icon: 'speed', group: 'right' },
   { key: 'cha', name: 'Харизма', icon: 'cha', group: 'right' },
-  { key: 'luck', name: 'Удача', icon: 'luck', group: 'right' },
+  { key: 'luck', name: 'Удача', icon: 'luck', group: 'right' }
 ];
 
 export const DEFAULT_COLLARS: Collar[] = [
@@ -67,4 +68,3 @@ export const INITIAL_BRANCHES: Branch[] = [
   { id: 'b1', name: 'Линия Альфа', color: '#8b0000', notes: 'Боевые коты' },
   { id: 'b2', name: 'Линия Бета', color: '#00008b', notes: 'Разведение' },
 ];
-

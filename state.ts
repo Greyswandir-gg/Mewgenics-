@@ -255,11 +255,15 @@ const calculateCatStats = (cat: Cat, sandboxCollarId?: string | null) => {
       if (def.key === 'hp') {
         const conStat = stats['con'];
         if (conStat) { gene = conStat.gene * 4; current = conStat.current * 4; }
-        const eventDelta = activeEvents.filter(e => e.statKey === def.key).reduce((sum, e) => sum + (e.delta || 0), 0);
-        const collarDelta = collar?.deltas[def.key] || 0;
-        current += (eventDelta + collarDelta);
-        current = Math.max(0, current);
       }
+      if (def.key === 'mana') {
+        const chaStat = stats['cha'];
+        if (chaStat) { gene = chaStat.gene * 3; current = chaStat.current * 3; }
+      }
+      const eventDelta = activeEvents.filter(e => e.statKey === def.key).reduce((sum, e) => sum + (e.delta || 0), 0);
+      const collarDelta = collar?.deltas[def.key] || 0;
+      current += (eventDelta + collarDelta);
+      current = Math.max(0, current);
       stats[def.key] = { current, gene, delta: current - gene };
     });
 

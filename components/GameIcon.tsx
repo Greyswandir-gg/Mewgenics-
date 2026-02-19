@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-export type IconType = 'hp' | 'str' | 'dex' | 'con' | 'int' | 'speed' | 'cha' | 'luck' | 'battle' | 'breeding' | 'cat' | 'archive' | 'branch';
+export type IconType = 'hp' | 'mana' | 'str' | 'dex' | 'con' | 'int' | 'speed' | 'cha' | 'luck' | 'battle' | 'breeding' | 'cat' | 'archive' | 'branch';
 
 interface GameIconProps {
   type: IconType | string;
@@ -12,6 +12,7 @@ interface GameIconProps {
 const GameIcon: React.FC<GameIconProps> = ({ type, className = "", size = 24 }) => {
   const icons: Record<string, React.ReactNode> = {
     hp: <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />,
+    mana: <path d="M12 2C9 5.5 7 9 7 12a5 5 0 0010 0c0-3-2-6.5-5-10zm0 7.5c.8 1.2 1.5 2.6 1.5 3.7a1.5 1.5 0 11-3 0c0-1.1.7-2.5 1.5-3.7z" />,
     str: <path d="M12.5 2c-3.1 0-5.4 2-5.4 5.3s2.3 5.4 5.4 5.4 5.4-2.1 5.4-5.4S15.6 2 12.5 2zM12 14c-4.4 0-8 2.2-8 5v3h16v-3c0-2.8-3.6-5-8-5z" />, // Arm silhouette placeholder
     dex: <path d="M21 2l-8.5 8.5L10 8l-3 3 2.5 2.5L2 21l3-3 2.5 2.5 3-3-2.5-2.5 8.5-8.5L21 2z" />, // Bow/Arrow feel
     con: <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" />, // Shield
