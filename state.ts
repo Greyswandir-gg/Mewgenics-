@@ -241,7 +241,7 @@ const useAppStateInternal = () => {
     });
 
     const combatStats = ['str', 'con', 'dex', 'int', 'speed'];
-    const subjectiveScore = Math.min(...combatStats.map(k => stats[k]?.current || 0));
+    const subjectiveScore = Math.min(...combatStats.map(k => stats[k]?.gene ?? 0));
 
     return { stats, subjectiveScore };
   };
