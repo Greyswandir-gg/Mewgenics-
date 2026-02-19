@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAppState } from '../state';
 import { Collar } from '../types';
-import { v4 as uuid } from 'uuid';
 
 const emptyDeltas = () => ({ str: 0, dex: 0, con: 0, speed: 0, int: 0, cha: 0, luck: 0 });
 
@@ -27,7 +26,8 @@ const CollarManagementView: React.FC = () => {
   };
 
   const save = () => {
-    const payload = { ...form, id: editingId || uuid() };
+    const genId = () => (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
+    const payload = { ...form, id: editingId || genId() };
     if (editingId) {
       updateCollar(editingId, payload);
     } else {
