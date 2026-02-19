@@ -44,9 +44,9 @@ const TeamBuilderView: React.FC = () => {
   const bestCombos = useMemo(() => {
     if (teamMembers.length === 0) return [];
     const collarOptions = collars.map(c => c.id);
-    const results: { score: number; picks: { catName: string; collarName: string }[] }[] = [];
+    const results: { score: number; picks: { catName: string; collarName: string; collarId: string }[] }[] = [];
 
-    const dfs = (idx: number, acc: { score: number; picks: { catName: string; collarName: string }[] }) => {
+    const dfs = (idx: number, used: Set<string>, acc: { score: number; picks: { catName: string; collarName: string; collarId: string }[] }) => {
       if (idx >= teamMembers.length) {
         results.push(acc);
         return;
@@ -55,16 +55,20 @@ const TeamBuilderView: React.FC = () => {
       const cat = cats.find(c => c.id === member.catId);
       if (!cat) return;
       collarOptions.forEach(co => {
+        if (used.has(co)) return; // не даём дубликаты ошейников
         const stats = calculateCatStats(cat, co);
-        const collarName = co ? (collars.find(c => c.id === co)?.name || 'Ошейник') : 'Без ошейника';
-        dfs(idx + 1, {
+        const collar = collars.find(c => c.id === co);
+        if (!collar) return;
+        used.add(co);
+        dfs(idx + 1, used, {
           score: acc.score + stats.subjectiveScore,
-          picks: [...acc.picks, { catName: cat.name, collarName }]
+          picks: [...acc.picks, { catName: cat.name, collarName: collar.name, collarId: co }]
         });
+        used.delete(co);
       });
     };
 
-    dfs(0, { score: 0, picks: [] });
+    dfs(0, new Set<string>(), { score: 0, picks: [] });
     return results.sort((a, b) => b.score - a.score).slice(0, 3);
   }, [teamMembers, collars, cats, calculateCatStats]);
 
