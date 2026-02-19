@@ -86,6 +86,18 @@ const TeamBuilderView: React.FC = () => {
     return { catId, collarId, role: bestAfter.role, finalScore, deltaBest, penalty };
   };
 
+  const currentTeamScore = useMemo(() => {
+    if (teamMembers.length === 0) return null;
+    let total = 0;
+    for (const m of teamMembers) {
+      if (!m.sandboxCollarId) return null;
+      const res = evalCollarForCat(m.catId, m.sandboxCollarId);
+      if (!res) return null;
+      total += res.finalScore;
+    }
+    return total;
+  }, [teamMembers, cats, collars, calculateCatStats]);
+
   // формируем топ-3 ошейника для каждого выбранного кота
   const topCollarsPerCat: Record<string, ReturnType<typeof evalCollarForCat>[]> = useMemo(() => {
     const map: Record<string, ReturnType<typeof evalCollarForCat>[]> = {};
@@ -168,7 +180,7 @@ const TeamBuilderView: React.FC = () => {
           {teamMembers.length > 0 && (
             <div className="px-4 py-2 border-4 border-black bg-white font-black uppercase text-xs sketch-border-sm flex items-center gap-2">
               <GameIcon type="trophy" size={18} />
-              Счёт команды: {bestCombos[0]?.total.toFixed(2) ?? '0'}
+              Счёт команды: {currentTeamScore != null ? currentTeamScore.toFixed(2) : '—'}
             </div>
           )}
           <button
