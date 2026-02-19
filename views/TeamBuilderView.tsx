@@ -159,18 +159,26 @@ const TeamBuilderView: React.FC = () => {
 
   return (
     <div className="p-4 md:p-8 space-y-10">
-      <div className="flex items-center justify-between gap-4 border-b-4 border-black pb-4">
+      <div className="flex items-center justify-between gap-4 border-b-4 border-black pb-4 flex-wrap">
         <h1 className="text-5xl font-black italic uppercase tracking-tighter flex items-center gap-3">
           <GameIcon type="cat" size={42} />
           Собрание команды
         </h1>
-        <button
-          onClick={confirmTeam}
-          disabled={isSaving || teamMembers.length === 0 || teamMembers.some(m => !m.sandboxCollarId)}
-          className="bg-black text-white px-6 py-3 border-4 border-black font-black uppercase text-sm tracking-widest sketch-border-sm disabled:opacity-40"
-        >
-          Подтвердить
-        </button>
+        <div className="flex items-center gap-4 flex-wrap">
+          {teamMembers.length > 0 && (
+            <div className="px-4 py-2 border-4 border-black bg-white font-black uppercase text-xs sketch-border-sm flex items-center gap-2">
+              <GameIcon type="trophy" size={18} />
+              Счёт команды: {bestCombos[0]?.total.toFixed(2) ?? '0'}
+            </div>
+          )}
+          <button
+            onClick={confirmTeam}
+            disabled={isSaving || teamMembers.length === 0 || teamMembers.some(m => !m.sandboxCollarId)}
+            className="bg-black text-white px-6 py-3 border-4 border-black font-black uppercase text-sm tracking-widest sketch-border-sm disabled:opacity-40"
+          >
+            Подтвердить
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 items-center">
