@@ -82,10 +82,14 @@ const CatListView: React.FC = () => {
             <input
               type="number"
               min={0}
-              max={10}
-              className="w-16 border-4 border-black px-3 py-2 text-sm bg-white font-black uppercase focus:ring-0 focus:outline-none sketch-border-sm"
+              max={99}
+              step={1}
+              className="w-20 border-4 border-black px-3 py-2 text-sm bg-white font-black uppercase focus:ring-0 focus:outline-none sketch-border-sm"
               value={minScore}
-              onChange={(e) => setMinScore(parseInt(e.target.value) || 0)}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                setMinScore(Number.isFinite(val) ? val : 0);
+              }}
             />
           </div>
 
