@@ -23,7 +23,8 @@ const CatListView: React.FC = () => {
     const matchesBranch = selectedBranch === 'all' || cat.branchId === selectedBranch;
     const matchesArchive = showArchived ? cat.isArchived : !cat.isArchived;
     const { subjectiveScore } = calculateCatStats(cat);
-    const matchesScore = subjectiveScore >= minScore;
+    const minScoreSafe = Number.isFinite(minScore) ? minScore : 0;
+    const matchesScore = subjectiveScore >= minScoreSafe;
     const matchesGender = genderFilter === 'all' || cat.gender === genderFilter;
     const matchesTags = selectedTags.length === 0 || selectedTags.every(t => cat.tags.includes(t));
     return matchesSearch && matchesBranch && matchesArchive && matchesScore && matchesGender && matchesTags;
@@ -87,8 +88,8 @@ const CatListView: React.FC = () => {
               className="w-20 border-4 border-black px-3 py-2 text-sm bg-white font-black uppercase focus:ring-0 focus:outline-none sketch-border-sm"
               value={minScore}
               onChange={(e) => {
-                const val = Number(e.target.value);
-                setMinScore(Number.isFinite(val) ? val : 0);
+                const parsed = parseInt(e.target.value || '0', 10);
+                setMinScore(Number.isNaN(parsed) ? 0 : parsed);
               }}
             />
           </div>
